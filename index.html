@@ -7,155 +7,178 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
 
-  <!-- CSS bawaan qgis2web -->
   <link rel="stylesheet" href="css/leaflet.css">
-  <link rel="stylesheet" href="css/L.Control.Layers.Tree.css">
   <link rel="stylesheet" href="css/qgis2web.css">
   <link rel="stylesheet" href="css/fontawesome-all.min.css">
   <link rel="stylesheet" href="css/leaflet.photon.css">
   <link rel="stylesheet" href="css/leaflet-measure.css">
 
-  <!-- Chart.js untuk grafik bulanan -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
 
   <style>
     html, body, #map {
-      width: 100%;
-      height: 100%;
-      padding: 0;
-      margin: 0;
+      width: 100%; height: 100%; padding: 0; margin: 0;
       font-family: 'Segoe UI', Tahoma, sans-serif;
     }
 
-    /* ---------- Panel kontrol kiri atas ---------- */
-    #control-panel {
+    #right-panel {
       position: absolute;
-      top: 10px;
-      left: 60px;              /* geser kanan agar tidak menabrak zoom control */
-      z-index: 1000;
-      background: rgba(255,255,255,0.95);
-      padding: 12px 14px;
+      top: 12px; right: 12px; bottom: 12px;
+      z-index: 1000; width: 330px;
+      background: rgba(255,255,255,0.98);
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    #right-panel-body {
+      flex: 1; overflow-y: auto; padding: 12px;
+      display: flex; flex-direction: column; gap: 12px;
+    }
+    #right-panel-body::-webkit-scrollbar { width: 6px; }
+    #right-panel-body::-webkit-scrollbar-thumb {
+      background: #dfe6e9; border-radius: 3px;
+    }
+
+    .panel-section { background: #f8f9fa; border-radius: 8px; padding: 10px 12px; }
+    .section-header {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 11px; font-weight: 700; color: #2c3e50;
+      text-transform: uppercase; letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+    .section-header i { color: #3498db; font-size: 12px; }
+
+    .panel-section label.form-label {
+      display: block; font-size: 10px; font-weight: 600;
+      color: #7f8c8d; margin: 6px 0 3px;
+      text-transform: uppercase; letter-spacing: 0.3px;
+    }
+    .panel-section select {
+      width: 100%; padding: 7px 10px; font-size: 12px;
+      border: 1px solid #dfe6e9; border-radius: 6px;
+      background: #fff; color: #2c3e50; cursor: pointer;
+    }
+    .panel-section select:focus {
+      outline: none; border-color: #3498db;
+      box-shadow: 0 0 0 3px rgba(52,152,219,0.15);
+    }
+
+    .layer-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 5px 0; cursor: pointer; font-size: 12px;
+      color: #2c3e50; user-select: none;
+    }
+    .layer-item:hover { color: #3498db; }
+    .layer-item input[type="checkbox"] {
+      appearance: none; -webkit-appearance: none;
+      width: 16px; height: 16px;
+      border: 2px solid #b2bec3; border-radius: 4px;
+      cursor: pointer; position: relative; flex-shrink: 0;
+    }
+    .layer-item input[type="checkbox"]:checked {
+      background: #3498db; border-color: #3498db;
+    }
+    .layer-item input[type="checkbox"]:checked::after {
+      content: ''; position: absolute; left: 3.5px; top: 0.5px;
+      width: 5px; height: 9px;
+      border: solid white; border-width: 0 2px 2px 0;
+      transform: rotate(45deg);
+    }
+    .layer-swatch {
+      width: 18px; height: 12px; border: 2.5px solid #333;
+      background: transparent; flex-shrink: 0; border-radius: 2px;
+    }
+
+    /* Swatch RS: plus merah dengan outline putih */
+    .layer-swatch.rs-plus {
+      width: 16px; height: 16px;
+      border: none;
+      background: transparent;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 26'><path d='M10 2 h6 v8 h8 v6 h-8 v8 h-6 v-8 h-8 v-6 h8 z' fill='%23e74c3c' stroke='white' stroke-width='2' stroke-linejoin='round'/></svg>");
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+    }
+
+    .legend-subtitle {
+      font-size: 10px; font-weight: 600; color: #7f8c8d;
+      text-transform: uppercase; letter-spacing: 0.3px;
+      margin: 8px 0 4px;
+    }
+    .legend-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 2px 0; font-size: 11px; color: #2c3e50;
+    }
+    .legend-row .swatch {
+      width: 18px; height: 12px;
+      border: 1px solid rgba(0,0,0,0.2);
+      border-radius: 2px; flex-shrink: 0;
+    }
+
+    #chart-wrapper { position: relative; height: 170px; width: 100%; }
+    #chart-wrapper canvas { width: 100% !important; height: 100% !important; }
+
+    .leaflet-control-zoom { border-radius: 8px !important; overflow: hidden; }
+    .leaflet-control-zoom a {
+      background: rgba(255,255,255,0.95) !important;
+      color: #2c3e50 !important;
+      border-color: #dfe6e9 !important;
+    }
+    .leaflet-control-layers { display: none !important; }
+
+    /* Marker RS custom (divIcon) */
+    .rs-marker { background: transparent; border: none; }
+    .rs-marker svg { display: block; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.4)); }
+
+    .leaflet-popup-content-wrapper {
       border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
-      min-width: 240px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.2);
     }
-    #control-panel h3 {
-      margin: 0 0 8px 0;
-      font-size: 14px;
-      color: #2c3e50;
-      border-bottom: 1px solid #ddd;
-      padding-bottom: 6px;
-    }
-    #control-panel label {
-      display: block;
-      font-size: 12px;
-      font-weight: 600;
-      color: #34495e;
-      margin: 6px 0 2px;
-    }
-    #control-panel select {
-      width: 100%;
-      padding: 6px 8px;
-      font-size: 13px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      background: #fff;
-      cursor: pointer;
-    }
-    #control-panel select:focus {
-      outline: 2px solid #3498db;
-    }
-
-    /* ---------- Panel grafik kanan bawah ---------- */
-    #chart-panel {
-      position: absolute;
-      bottom: 20px;
-      right: 20px;
-      z-index: 1000;
-      width: 420px;
-      height: 260px;
-      background: rgba(255,255,255,0.97);
-      padding: 8px 10px;
-      border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-    }
-    #chart-panel .chart-title {
-      font-size: 12px;
-      font-weight: 700;
-      color: #2c3e50;
-      text-align: center;
-      margin-bottom: 4px;
-    }
-    #chart-panel canvas {
-      width: 100% !important;
-      height: 210px !important;
-    }
-
-    /* ---------- Legenda kiri bawah ---------- */
-    .info.legend {
-      background: rgba(255,255,255,0.95);
-      padding: 8px 12px;
-      border-radius: 8px;
-      box-shadow: 0 1px 6px rgba(0,0,0,0.3);
-      line-height: 20px;
-      color: #333;
-      font-size: 12px;
-    }
-    .info.legend i {
-      width: 22px;
-      height: 14px;
-      float: left;
-      margin-right: 6px;
-      opacity: 0.9;
-      border: 1px solid #999;
-    }
-    .info.legend .legend-title {
-      font-weight: 700;
-      margin-bottom: 4px;
-      display: block;
-      font-size: 12px;
-    }
-
-    /* ---------- Popup ---------- */
     .leaflet-popup-content {
-      font-size: 13px;
-      line-height: 1.5;
+      font-size: 12px; line-height: 1.5;
+      margin: 12px 16px; min-width: 200px;
     }
     .leaflet-popup-content h4 {
-      margin: 0 0 6px;
-      color: #2c3e50;
-      border-bottom: 1px solid #eee;
-      padding-bottom: 4px;
+      margin: 0 0 6px; color: #2c3e50; font-size: 13px;
+      padding-bottom: 6px; border-bottom: 1px solid #ecf0f1;
+    }
+    .leaflet-popup-content .popup-sub {
+      font-size: 10px; color: #95a5a6; margin-bottom: 8px;
+      text-transform: uppercase; letter-spacing: 0.3px;
+    }
+    .leaflet-popup-content .pkm-list {
+      font-size: 10px; color: #7f8c8d;
+      background: #f8f9fa; padding: 6px 8px;
+      border-radius: 6px; margin-bottom: 8px;
+      line-height: 1.4;
     }
     .leaflet-popup-content table {
-      border-collapse: collapse;
-      width: 100%;
+      border-collapse: collapse; width: 100%;
     }
-    .leaflet-popup-content td {
-      padding: 2px 4px;
-    }
-    .leaflet-popup-content td:first-child {
-      color: #666;
-    }
+    .leaflet-popup-content td { padding: 3px 4px; font-size: 12px; }
+    .leaflet-popup-content td:first-child { color: #7f8c8d; }
     .leaflet-popup-content td:last-child {
-      font-weight: 600;
-      text-align: right;
-      color: #c0392b;
+      font-weight: 600; text-align: right; color: #c0392b;
+    }
+    .leaflet-popup-content td.total-row { color: #2c3e50; }
+    .leaflet-popup-content td.total-row:last-child {
+      color: #c0392b; font-size: 14px;
     }
 
-    /* ---------- Loading indicator ---------- */
     #loading {
-      position: absolute;
-      top: 50%;
-      left: 50%;
+      position: absolute; top: 50%; left: 50%;
       transform: translate(-50%,-50%);
       z-index: 2000;
-      background: rgba(0,0,0,0.7);
-      color: #fff;
-      padding: 10px 20px;
-      border-radius: 6px;
-      font-size: 14px;
-      display: none;
+      background: rgba(44,62,80,0.85); color: #fff;
+      padding: 12px 24px; border-radius: 8px;
+      font-size: 13px; display: none;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+    }
+
+    @media (max-width: 700px) {
+      #right-panel { width: 260px; top: 8px; right: 8px; bottom: 8px; }
+      .panel-section { padding: 8px 10px; }
     }
   </style>
 
@@ -165,41 +188,84 @@
 
   <div id="map"></div>
 
-  <!-- Panel kontrol tahun & penyakit -->
-  <div id="control-panel">
-    <h3><i class="fas fa-map-marked-alt"></i> Dinamika Penyakit Menular</h3>
-    <label for="select-penyakit">Jenis Penyakit</label>
-    <select id="select-penyakit">
-      <option value="leptospirosis">Leptospirosis</option>
-      <option value="tb_baru">TB Baru</option>
-      <option value="dbd" selected>DBD (Demam Berdarah)</option>
-    </select>
+  <div id="right-panel">
+    <div id="right-panel-body">
 
-    <label for="select-tahun">Tahun</label>
-    <select id="select-tahun">
-      <option>2019</option>
-      <option>2020</option>
-      <option>2021</option>
-      <option>2022</option>
-      <option>2023</option>
-      <option>2024</option>
-      <option selected>2025</option>
-      <option>2026</option>
-    </select>
-  </div>
+      <div class="panel-section">
+        <div class="section-header">
+          <i class="fas fa-map-marked-alt"></i> Dinamika Penyakit
+        </div>
+        <label class="form-label" for="select-penyakit">Jenis Penyakit</label>
+        <select id="select-penyakit">
+          <option value="leptospirosis">Leptospirosis</option>
+          <option value="tb_baru">TB Baru</option>
+          <option value="dbd" selected>DBD (Demam Berdarah)</option>
+        </select>
+        <label class="form-label" for="select-tahun">Tahun</label>
+        <select id="select-tahun">
+          <option>2019</option><option>2020</option><option>2021</option>
+          <option>2022</option><option>2023</option><option>2024</option>
+          <option selected>2025</option><option>2026</option>
+        </select>
+      </div>
 
-  <!-- Panel grafik bulanan -->
-  <div id="chart-panel">
-    <div class="chart-title" id="chart-title">Kasus Bulanan</div>
-    <canvas id="monthly-chart"></canvas>
+      <div class="panel-section">
+        <div class="section-header">
+          <i class="fas fa-layer-group"></i> Layer Aksesibilitas
+        </div>
+
+        <label class="layer-item">
+          <input type="checkbox" data-layer="rs">
+          <span class="layer-swatch rs-plus"></span>
+          Rumah Sakit
+        </label>
+
+        <label class="layer-item">
+          <input type="checkbox" data-layer="sangat">
+          <span class="layer-swatch" style="border-color:#00c853;"></span>
+          Sangat Terjangkau (&lt;1 km)
+        </label>
+        <label class="layer-item">
+          <input type="checkbox" data-layer="terjangkau">
+          <span class="layer-swatch" style="border-color:#ffd600;"></span>
+          Terjangkau (1–3 km)
+        </label>
+        <label class="layer-item">
+          <input type="checkbox" data-layer="jauh">
+          <span class="layer-swatch" style="border-color:#ff6d00;"></span>
+          Jauh (3–5 km)
+        </label>
+        <label class="layer-item">
+          <input type="checkbox" data-layer="tidak">
+          <span class="layer-swatch" style="border-color:#d50000;"></span>
+          Tidak Terjangkau (&gt;5 km)
+        </label>
+      </div>
+
+      <div class="panel-section">
+        <div class="section-header">
+          <i class="fas fa-list-ul"></i> Legenda
+        </div>
+        <div class="legend-subtitle">Jumlah Kasus per Kecamatan</div>
+        <div id="legend-disease-items"></div>
+      </div>
+
+      <div class="panel-section">
+        <div class="section-header">
+          <i class="fas fa-chart-line"></i> Kasus Bulanan
+        </div>
+        <div id="chart-wrapper">
+          <canvas id="monthly-chart"></canvas>
+        </div>
+      </div>
+
+    </div>
   </div>
 
   <div id="loading">Memuat data...</div>
 
-  <!-- JS bawaan qgis2web -->
   <script src="js/qgis2web_expressions.js"></script>
   <script src="js/leaflet.js"></script>
-  <script src="js/L.Control.Layers.Tree.min.js"></script>
   <script src="js/leaflet.rotatedMarker.js"></script>
   <script src="js/leaflet.pattern.js"></script>
   <script src="js/leaflet-hash.js"></script>
@@ -208,221 +274,405 @@
   <script src="js/labelgun.min.js"></script>
   <script src="js/labels.js"></script>
   <script src="js/leaflet.photon.js"></script>
-  <script src="js/leaflet-measure.js"></script>
+
+  <script src="data/TidakTerjangkau_1.js"></script>
+  <script src="data/Jauh_2.js"></script>
+  <script src="data/Terjangkau_3.js"></script>
+  <script src="data/SangatTerjangkau_4.js"></script>
+  <script src="data/RumahSakit_5.js"></script>
 
   <script>
   /* =========================================================
-     1. INISIALISASI PETA (sama seperti qgis2web asli)
+     1. PETA & KONTROL
      ========================================================= */
   var map = L.map('map', {
-    zoomControl: false,
-    maxZoom: 28,
-    minZoom: 1
-  }).fitBounds([
-    [-7.281307535002637, 110.04105161835095],
-    [6.821550889056735, 110.68684381433165]
-  ]);
+    zoomControl: false, maxZoom: 28, minZoom: 1
+  }).setView([-6.9932, 110.4203], 11);
 
   var hash = new L.Hash(map);
-
   map.attributionControl.setPrefix(
     '<a href="https://github.com/qgis2web/qgis2web" target="_blank">qgis2web</a> ' +
     '&middot; <a href="https://leafletjs.com">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>'
   );
-
   var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
 
-  // Zoom control
-  L.control.zoom({position: 'topleft'}).addTo(map);
 
-  // Measure control
-  var measureControl = new L.Control.Measure({
-    position: 'topleft',
-    primaryLengthUnit: 'meters',
-    secondaryLengthUnit: 'kilometers',
-    primaryAreaUnit: 'sqmeters',
-    secondaryAreaUnit: 'hectares'
-  });
-  measureControl.addTo(map);
-
-  // Basemap
+  /* =========================================================
+     2. PANES
+     ========================================================= */
   map.createPane('pane_GoogleSatellite_0');
   map.getPane('pane_GoogleSatellite_0').style.zIndex = 400;
-  var layer_GoogleSatellite_0 = L.tileLayer(
-    'https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
-      pane: 'pane_GoogleSatellite_0',
-      opacity: 1.0,
-      attribution: '',
-      minZoom: 1, maxZoom: 28,
-      minNativeZoom: 0, maxNativeZoom: 19
-    });
-  map.addLayer(layer_GoogleSatellite_0);
 
-  // Fokus ke Semarang
-  map.setView([-6.9932, 110.4203], 11);
+  map.createPane('pane_puskesmas');
+  map.getPane('pane_puskesmas').style.zIndex = 405;
 
+  map.createPane('pane_SangatTerjangkau');
+  map.getPane('pane_SangatTerjangkau').style.zIndex = 410;
+  map.createPane('pane_Terjangkau');
+  map.getPane('pane_Terjangkau').style.zIndex = 411;
+  map.createPane('pane_Jauh');
+  map.getPane('pane_Jauh').style.zIndex = 412;
+  map.createPane('pane_TidakTerjangkau');
+  map.getPane('pane_TidakTerjangkau').style.zIndex = 413;
+  map.createPane('pane_RumahSakit');
+  map.getPane('pane_RumahSakit').style.zIndex = 415;
 
-  /* =========================================================
-     2. STATE & KONFIGURASI
-     ========================================================= */
-  var state = {
-    penyakit: 'dbd',
-    tahun: '2025',
-    mapData: {},       // { "P01": 77, "P02": 65, ... }  nilai total dari map_{tahun}.json
-    barData: {},       // { "Poncol": {perempuan, laki_laki, meninggal_laki_laki, meninggal_perempuan}, ... }
-    geojsonLayer: null,
-    chartInstance: null
-  };
-
-  // Label penyakit untuk ditampilkan
-  var LABEL_PENYAKIT = {
-    'leptospirosis': 'Leptospirosis',
-    'tb_baru':       'TB Baru',
-    'dbd':           'DBD'
-  };
-
+  map.createPane('pane_kec_outline');
+  map.getPane('pane_kec_outline').style.zIndex = 420;
+  map.getPane('pane_kec_outline').style.pointerEvents = 'none';
 
   /* =========================================================
-     3. UTIL: WARNA CHOROPLETH (putih → kuning → oranye → merah)
+     3. BASEMAP
      ========================================================= */
-  function getColor(value, maxVal) {
-    if (maxVal <= 0) return '#f0f0f0';
-    var ratio = value / maxVal;
-    // Skema manual 6 kelas
-    return ratio > 0.80 ? '#7f0000' :
-           ratio > 0.60 ? '#d63031' :
-           ratio > 0.40 ? '#e17055' :
-           ratio > 0.20 ? '#fdcb6e' :
-           ratio > 0.00 ? '#ffeaa7' :
-                          '#ffffff';
-  }
+  L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+    pane: 'pane_GoogleSatellite_0',
+    opacity: 1.0, attribution: '',
+    minZoom: 1, maxZoom: 28,
+    minNativeZoom: 0, maxNativeZoom: 19
+  }).addTo(map);
 
-  function getLegendGrades(maxVal) {
-    var grades = [0];
-    if (maxVal <= 0) return [0, 1];
-    for (var i = 1; i <= 5; i++) {
-      grades.push(Math.round(maxVal * i / 5));
+  /* =========================================================
+     4. DISSOLVE HELPER (Turf.js)
+     ========================================================= */
+  function dissolveGeoJSON(geojsonData) {
+    if (!geojsonData || !geojsonData.features || geojsonData.features.length === 0) {
+      return null;
     }
-    return grades;
-  }
-
-
-  /* =========================================================
-     4. LEGENDA (kiri bawah)
-     ========================================================= */
-  var legend = L.control({position: 'bottomleft'});
-
-  legend.onAdd = function () {
-    var div = L.DomUtil.create('div', 'info legend');
-    this._div = div;
-    return div;
-  };
-
-  legend.update = function (maxVal, penyakit, tahun) {
-    if (!this._div) return;
-    var grades = getLegendGrades(maxVal);
-    var html = '<span class="legend-title">Jumlah Kasus<br>' +
-               LABEL_PENYAKIT[penyakit] + ' - ' + tahun + '</span>';
-    for (var i = 0; i < grades.length - 1; i++) {
-      html += '<i style="background:' + getColor(grades[i] + 1, maxVal) + '"></i> ' +
-              grades[i] + ' – ' + grades[i + 1] + '<br>';
+    var features = geojsonData.features;
+    var merged = features[0];
+    for (var i = 1; i < features.length; i++) {
+      try {
+        var result = turf.union(merged, features[i]);
+        if (result) merged = result;
+      } catch (e) {
+        console.warn('Union gagal pada index ' + i, e);
+      }
     }
-    this._div.innerHTML = html;
-  };
-
-  legend.addTo(map);
-
-
-  /* =========================================================
-     5. LOAD GEOJSON PUSKESMAS (sekali saja)
-     ========================================================= */
-  fetch('data/puskesmas.geojson')
-    .then(function (r) { return r.json(); })
-    .then(function (geojson) {
-      state.geojsonLayer = L.geoJSON(geojson, {
-        style: styleFeature,
-        onEachFeature: onEachFeature
-      }).addTo(map);
-      // Setelah layer siap, baru load data tahun & penyakit
-      loadAllData();
-    })
-    .catch(function (e) {
-      console.error('Gagal load puskesmas.geojson:', e);
-      alert('Gagal memuat data/puskesmas.geojson. Pastikan hasil scraper ada di folder "data/".');
-    });
-
-
-  /* =========================================================
-     6. STYLING & POPUP FEATURE
-     ========================================================= */
-  function getKD_PUSK(feature) {
-    // Coba beberapa kemungkinan nama properti
-    return feature.properties.KD_PUSK ||
-           feature.properties.kd_pusk ||
-           feature.properties.KD_PUSK ||
-           feature.properties.ID;
+    return merged;
   }
 
-  function styleFeature(feature) {
-    var kd = getKD_PUSK(feature);
-    var value = state.mapData[kd] || 0;
-    var maxVal = Math.max.apply(null, Object.values(state.mapData).concat([1]));
+  /* =========================================================
+     5. STYLE BUFFER (HOLLOW)
+     ========================================================= */
+  var STYLE = {
+    sangat:     { color: '#00c853', weight: 2.5, fillColor: '#00c853', fillOpacity: 0.10, dashArray: '' },
+    terjangkau: { color: '#ffd600', weight: 2.5, fillColor: '#ffd600', fillOpacity: 0.10, dashArray: '' },
+    jauh:       { color: '#ff6d00', weight: 2.5, fillColor: '#ff6d00', fillOpacity: 0.10, dashArray: '' },
+    tidak:      { color: '#d50000', weight: 2.5, fillColor: '#d50000', fillOpacity: 0.10, dashArray: '4,4' }
+  };
 
+  function paneName(key) {
     return {
-      color: '#555',
-      weight: 0.8,
-      opacity: 0.8,
+      sangat: 'pane_SangatTerjangkau',
+      terjangkau: 'pane_Terjangkau',
+      jauh: 'pane_Jauh',
+      tidak: 'pane_TidakTerjangkau'
+    }[key];
+  }
+
+  function styleBufferFixed(key) {
+    return function() {
+      var s = STYLE[key];
+      return {
+        pane: paneName(key),
+        color: s.color, weight: s.weight, opacity: 1,
+        fillColor: s.fillColor, fillOpacity: s.fillOpacity,
+        dashArray: s.dashArray,
+        lineCap: 'round', lineJoin: 'round'
+      };
+    };
+  }
+
+  /* Popup generic untuk zona buffer (setelah dissolve, properti puskesmas hilang) */
+  function makeDissolvedBufferPopup(label, color) {
+    return function(feature, layer) {
+      var html = '<h4 style="color:' + color + ';">Zona Buffer</h4>' +
+                 '<div class="popup-sub">' + label + '</div>' +
+                 '<div style="font-size:11px;color:#7f8c8d;line-height:1.5;">' +
+                 'Area yang tergabung dari seluruh puskesmas dalam radius ini.</div>';
+      layer.bindPopup(html, {
+        maxHeight: 300, autoPan: true,
+        autoPanPaddingTopLeft: L.point(60, 60),
+        autoPanPaddingBottomRight: L.point(360, 320),
+        keepInView: true
+      });
+    };
+  }
+
+  /* =========================================================
+     6. BUAT BUFFER LAYER — DISSOLVED
+     ========================================================= */
+  showLoading(true);
+
+  // Tunggu DOM render dulu, baru proses dissolve (agak berat)
+  setTimeout(function() {
+    // ---- Sangat Terjangkau ----
+    var dissolvedSangat = dissolveGeoJSON(json_SangatTerjangkau_4);
+    var layer_SangatTerjangkau = L.geoJson(dissolvedSangat, {
+      pane: 'pane_SangatTerjangkau',
+      style: styleBufferFixed('sangat'),
+      onEachFeature: makeDissolvedBufferPopup('Sangat Terjangkau (<1 km)', '#00c853')
+    });
+
+    // ---- Terjangkau ----
+    var dissolvedTerjangkau = dissolveGeoJSON(json_Terjangkau_3);
+    var layer_Terjangkau = L.geoJson(dissolvedTerjangkau, {
+      pane: 'pane_Terjangkau',
+      style: styleBufferFixed('terjangkau'),
+      onEachFeature: makeDissolvedBufferPopup('Terjangkau (1–3 km)', '#ffd600')
+    });
+
+    // ---- Jauh ----
+    var dissolvedJauh = dissolveGeoJSON(json_Jauh_2);
+    var layer_Jauh = L.geoJson(dissolvedJauh, {
+      pane: 'pane_Jauh',
+      style: styleBufferFixed('jauh'),
+      onEachFeature: makeDissolvedBufferPopup('Jauh (3–5 km)', '#ff6d00')
+    });
+
+    // ---- Tidak Terjangkau ----
+    var dissolvedTidak = dissolveGeoJSON(json_TidakTerjangkau_1);
+    var layer_TidakTerjangkau = L.geoJson(dissolvedTidak, {
+      pane: 'pane_TidakTerjangkau',
+      style: styleBufferFixed('tidak'),
+      onEachFeature: makeDissolvedBufferPopup('Tidak Terjangkau (>5 km)', '#d50000')
+    });
+
+    /* =========================================================
+       7. RS MARKER — PLUS MERAH + OUTLINE PUTIH
+       ========================================================= */
+    var rsIcon = L.divIcon({
+      className: 'rs-marker',
+      html: '<svg width="26" height="26" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg">' +
+            '<path d="M10 2 h6 v8 h8 v6 h-8 v8 h-6 v-8 h-8 v-6 h8 z" ' +
+            'fill="#e74c3c" stroke="#ffffff" stroke-width="2" stroke-linejoin="round"/>' +
+            '</svg>',
+      iconSize: [26, 26],
+      iconAnchor: [13, 13],
+      popupAnchor: [0, -13]
+    });
+
+    var layer_RumahSakit = L.geoJson(json_RumahSakit_5, {
+      pane: 'pane_RumahSakit',
+      pointToLayer: function(feature, latlng) {
+        return L.marker(latlng, {
+          pane: 'pane_RumahSakit',
+          icon: rsIcon,
+          riseOnHover: true
+        });
+      },
+      onEachFeature: function(feature, layer) {
+        var p = feature.properties || {};
+        var nama = p.name || p.official_n || 'Rumah Sakit';
+        var html = '<h4>' + nama + '</h4>' +
+                   '<div class="popup-sub" style="color:#e74c3c;">Rumah Sakit</div>';
+        if (p.addr_full) html += '📍 ' + p.addr_full + '<br>';
+        if (p.contact_ph) html += '📞 ' + p.contact_ph + '<br>';
+        if (p.website)   html += '🌐 ' + p.website;
+        layer.bindPopup(html, {maxHeight: 300, autoPan: true,
+          autoPanPaddingBottomRight: L.point(360, 320)});
+        layer.bindTooltip(nama, {sticky: true});
+      }
+    });
+
+    /* =========================================================
+       8. BIND CHECKBOX → LAYER
+       ========================================================= */
+    var layerMap = {
+      'rs': layer_RumahSakit,
+      'sangat': layer_SangatTerjangkau,
+      'terjangkau': layer_Terjangkau,
+      'jauh': layer_Jauh,
+      'tidak': layer_TidakTerjangkau
+    };
+    document.querySelectorAll('input[data-layer]').forEach(function(cb) {
+      cb.addEventListener('change', function() {
+        var layer = layerMap[this.dataset.layer];
+        if (!layer) return;
+        if (this.checked) layer.addTo(map);
+        else map.removeLayer(layer);
+      });
+    });
+
+    /* =========================================================
+       9. STATE
+       ========================================================= */
+    window.state = {
+      penyakit: 'dbd', tahun: '2025',
+      mapData: {}, barData: {},
+      geojsonLayer: null, outlineLayer: null, chartInstance: null
+    };
+    window.LABEL_PENYAKIT = {
+      'leptospirosis': 'Leptospirosis',
+      'tb_baru': 'TB Baru', 'dbd': 'DBD'
+    };
+    window.KD_TO_KEC = {};
+    window.PKM_TO_KEC = {};
+
+    /* =========================================================
+       10. LOAD PUSKESMAS → DISSOLVE KE KECAMATAN
+       ========================================================= */
+    fetch('data/puskesmas.geojson')
+      .then(function(r) { return r.json(); })
+      .then(function(gj) {
+        gj.features.forEach(function(f) {
+          var kd  = f.properties.KD_PUSK;
+          var pkm = f.properties.PUSKESMAS;
+          var kec = f.properties.KEC;
+          if (kd)  window.KD_TO_KEC[kd] = kec;
+          if (pkm) window.PKM_TO_KEC[pkm] = kec;
+        });
+
+        // Group by kecamatan
+        var groups = {};
+        gj.features.forEach(function(f) {
+          var kec = f.properties.KEC;
+          if (!kec) return;
+          if (!groups[kec]) groups[kec] = [];
+          groups[kec].push(f);
+        });
+
+        // Dissolve
+        var kecFeatures = [];
+        Object.keys(groups).forEach(function(kec) {
+          var feats = groups[kec];
+          var merged = feats[0];
+          for (var i = 1; i < feats.length; i++) {
+            try {
+              var r = turf.union(merged, feats[i]);
+              if (r) merged = r;
+            } catch (e) {
+              console.warn('Union gagal untuk ' + kec + ' idx ' + i, e);
+            }
+          }
+          merged.properties = {
+            KECAMATAN: kec,
+            PUSKESMAS_LIST: feats.map(function(f) { return f.properties.PUSKESMAS; }),
+            KD_PUSK_LIST: feats.map(function(f) { return f.properties.KD_PUSK; }),
+            N_PUSKESMAS: feats.length
+          };
+          kecFeatures.push(merged);
+        });
+
+        var kecGeoJSON = {type: 'FeatureCollection', features: kecFeatures};
+
+        // Choropleth (fill)
+        state.geojsonLayer = L.geoJSON(kecGeoJSON, {
+          pane: 'pane_puskesmas',
+          style: styleFeature,
+          onEachFeature: onEachFeature
+        }).addTo(map);
+
+        // Outline (garis, di atas semua)
+        state.outlineLayer = L.geoJSON(kecGeoJSON, {
+          pane: 'pane_kec_outline',
+          style: {
+            pane: 'pane_kec_outline',
+            color: '#000000', weight: 1, opacity: 0.9,
+            fill: false, interactive: false
+          }
+        }).addTo(map);
+
+        loadAllData();
+      })
+      .catch(function(e) {
+        console.error('Gagal load puskesmas.geojson:', e);
+        showLoading(false);
+      });
+  }, 50);
+
+  /* =========================================================
+     11. STYLING & POPUP KECAMATAN
+     ========================================================= */
+  function styleFeature(feature) {
+    var kec = feature.properties.KECAMATAN;
+    var value = state.mapData[kec] || 0;
+    var maxVal = Math.max.apply(null, Object.values(state.mapData).concat([1]));
+    return {
+      pane: 'pane_puskesmas',
+      color: 'transparent', weight: 0,
       fillColor: getColor(value, maxVal),
       fillOpacity: 0.75
     };
   }
 
   function onEachFeature(feature, layer) {
-    // Simpan nama puskesmas
-    var nama = feature.properties.PUSKESMAS || feature.properties.puskesmas || '-';
-    layer._namaPuskesmas = nama;
-    layer._kdPusk = getKD_PUSK(feature);
+    var kec = feature.properties.KECAMATAN;
+    var pkmList = feature.properties.PUSKESMAS_LIST || [];
 
-    layer.on('click', function () {
-      var kd = this._kdPusk;
-      var namaPkm = this._namaPuskesmas;
-      var total = state.mapData[kd] || 0;
-
-      // Ambil detail gender dari bar data (dicocokkan berdasarkan nama)
-      var detail = state.barData[namaPkm] || {
+    layer.on('click', function() {
+      var total = state.mapData[kec] || 0;
+      var detail = state.barData[kec] || {
         laki_laki: '-', perempuan: '-',
         meninggal_laki_laki: '-', meninggal_perempuan: '-'
       };
-
-      var html = '<h4>' + namaPkm + '</h4>' +
-                 '<div style="font-size:11px;color:#888;margin-bottom:6px;">' +
+      var html = '<h4>Kec. ' + kec + '</h4>' +
+                 '<div class="popup-sub">' +
                  LABEL_PENYAKIT[state.penyakit] + ' — ' + state.tahun + '</div>' +
+                 '<div class="pkm-list">' +
+                 '<b>Puskesmas (' + pkmList.length + '):</b><br>' +
+                 pkmList.join(' · ') +
+                 '</div>' +
                  '<table>' +
                  '<tr><td>Laki-laki</td><td>' + detail.laki_laki + '</td></tr>' +
                  '<tr><td>Perempuan</td><td>' + detail.perempuan + '</td></tr>' +
-                 '<tr><td><b>Total Kasus</b></td><td><b>' + total + '</b></td></tr>';
-
-      // Untuk DBD & Leptospirosis, tampilkan juga jumlah meninggal
+                 '<tr><td class="total-row"><b>Total Kasus</b></td>' +
+                 '<td class="total-row"><b>' + total + '</b></td></tr>';
       if (state.penyakit !== 'tb_baru') {
         html += '<tr><td>Meninggal (L)</td><td>' + detail.meninggal_laki_laki + '</td></tr>' +
                 '<tr><td>Meninggal (P)</td><td>' + detail.meninggal_perempuan + '</td></tr>';
       }
       html += '</table>';
 
-      this.bindPopup(html).openPopup();
+      this.bindPopup(html, {
+        maxHeight: 400, autoPan: true,
+        autoPanPaddingTopLeft: L.point(60, 60),
+        autoPanPaddingBottomRight: L.point(360, 320),
+        keepInView: true, offset: L.point(0, -10)
+      }).openPopup();
     });
 
-    // Tooltip nama saat hover
-    layer.bindTooltip(feature.properties.PUSKESMAS || '', {sticky: true});
+    layer.bindTooltip('Kec. ' + kec, {sticky: true});
   }
 
+  /* =========================================================
+     12. WARNA CHOROPLETH
+     ========================================================= */
+  function getColor(value, maxVal) {
+    if (maxVal <= 0) return '#f0f0f0';
+    var ratio = value / maxVal;
+    return ratio > 0.80 ? '#7f0000' :
+           ratio > 0.60 ? '#d63031' :
+           ratio > 0.40 ? '#e17055' :
+           ratio > 0.20 ? '#fdcb6e' :
+           ratio > 0.00 ? '#ffeaa7' : '#ffffff';
+  }
+  function getLegendGrades(maxVal) {
+    var grades = [0];
+    if (maxVal <= 0) return [0, 1];
+    for (var i = 1; i <= 5; i++) grades.push(Math.round(maxVal * i / 5));
+    return grades;
+  }
+  function updateDiseaseLegend(maxVal, penyakit, tahun) {
+    var container = document.getElementById('legend-disease-items');
+    var grades = getLegendGrades(maxVal);
+    var html = '<div style="font-size:10px;color:#95a5a6;margin-bottom:6px;">' +
+               LABEL_PENYAKIT[penyakit] + ' — ' + tahun + '</div>';
+    for (var i = 0; i < grades.length - 1; i++) {
+      html += '<div class="legend-row">' +
+              '<span class="swatch" style="background:' +
+              getColor(grades[i] + 1, maxVal) + '"></span>' +
+              '<span>' + grades[i] + ' – ' + grades[i + 1] + '</span>' +
+              '</div>';
+    }
+    container.innerHTML = html;
+  }
 
   /* =========================================================
-     7. LOAD DATA MAP + BAR + LINE
+     13. LOAD DATA + AGGREGATE
      ========================================================= */
   function loadAllData() {
     showLoading(true);
-
     var base = 'data/' + state.penyakit + '/';
     var mapUrl  = base + 'map_'  + state.tahun + '.json';
     var barUrl  = base + 'bar_'  + state.tahun + '.json';
@@ -433,130 +683,109 @@
       fetch(barUrl).then(function(r){return r.json();}),
       fetch(lineUrl).then(function(r){return r.json();})
     ])
-    .then(function (results) {
-      var mapJson = results[0];
-      var barJson = results[1];
-      var lineJson = results[2];
+    .then(function(results) {
+      var mapJson = results[0], barJson = results[1], lineJson = results[2];
 
-      // --- Bangun state.mapData: { "P01": 77, ... } ---
+      // Aggregate map data per kecamatan
       state.mapData = {};
       if (mapJson && mapJson.data) {
-        mapJson.data.forEach(function (d) {
-          state.mapData[d[0]] = d[1];
+        mapJson.data.forEach(function(d) {
+          var kec = KD_TO_KEC[d[0]];
+          if (!kec) return;
+          state.mapData[kec] = (state.mapData[kec] || 0) + d[1];
         });
       }
 
-      // --- Bangun state.barData: { "Poncol": {...}, ... } ---
+      // Aggregate bar data per kecamatan
       state.barData = {};
       if (Array.isArray(barJson)) {
-        barJson.forEach(function (d) {
-          state.barData[d.name] = {
-            laki_laki: d.laki_laki,
-            perempuan: d.perempuan,
-            meninggal_laki_laki: d.meninggal_laki_laki,
-            meninggal_perempuan: d.meninggal_perempuan
-          };
+        barJson.forEach(function(d) {
+          var kec = PKM_TO_KEC[d.name];
+          if (!kec) return;
+          if (!state.barData[kec]) {
+            state.barData[kec] = {
+              laki_laki: 0, perempuan: 0,
+              meninggal_laki_laki: 0, meninggal_perempuan: 0
+            };
+          }
+          state.barData[kec].laki_laki           += (d.laki_laki || 0);
+          state.barData[kec].perempuan           += (d.perempuan || 0);
+          state.barData[kec].meninggal_laki_laki += (d.meninggal_laki_laki || 0);
+          state.barData[kec].meninggal_perempuan += (d.meninggal_perempuan || 0);
         });
       }
 
-      // --- Update peta (warna) ---
-      if (state.geojsonLayer) {
-        state.geojsonLayer.setStyle(styleFeature);
-      }
+      if (state.geojsonLayer) state.geojsonLayer.setStyle(styleFeature);
 
-      // --- Update legenda ---
       var maxVal = Math.max.apply(null, Object.values(state.mapData).concat([1]));
-      legend.update(maxVal, state.penyakit, state.tahun);
+      updateDiseaseLegend(maxVal, state.penyakit, state.tahun);
 
-      // --- Update grafik bulanan ---
       updateMonthlyChart(lineJson, state.penyakit, state.tahun);
-
       showLoading(false);
     })
-    .catch(function (e) {
+    .catch(function(e) {
       console.error('Gagal load data:', e);
       showLoading(false);
-      alert('Gagal memuat data untuk ' + state.penyakit + ' tahun ' + state.tahun);
     });
   }
 
-
   /* =========================================================
-     8. GRAFIK BULANAN (Chart.js)
+     14. GRAFIK BULANAN
      ========================================================= */
   var BULAN = ['Jan','Feb','Mar','Apr','Mei','Jun',
                'Jul','Agu','Sep','Okt','Nov','Des'];
 
   function updateMonthlyChart(lineJson, penyakit, tahun) {
-    if (state.chartInstance) {
-      state.chartInstance.destroy();
-    }
-
-    // Siapkan dataset
+    if (state.chartInstance) state.chartInstance.destroy();
     var datasets = [];
     var palette = ['#0984e3', '#00b894', '#e17055', '#c1306a', '#d63031', '#6c5ce7'];
 
     if (lineJson && lineJson.data && lineJson.data.length) {
-      lineJson.data.forEach(function (series, i) {
+      lineJson.data.forEach(function(series, i) {
         datasets.push({
-          label: series.name,
-          data: series.data,
+          label: series.name, data: series.data,
           borderColor: palette[i % palette.length],
           backgroundColor: palette[i % palette.length] + '33',
-          borderWidth: 2,
-          tension: 0.3,
-          fill: false,
-          pointRadius: 3
+          borderWidth: 2, tension: 0.3,
+          fill: false, pointRadius: 2.5
         });
       });
     }
-
-    document.getElementById('chart-title').textContent =
-      'Kasus Bulanan ' + LABEL_PENYAKIT[penyakit] + ' — ' + tahun;
 
     var ctx = document.getElementById('monthly-chart').getContext('2d');
     state.chartInstance = new Chart(ctx, {
       type: 'line',
       data: { labels: BULAN, datasets: datasets },
       options: {
-        responsive: true,
-        maintainAspectRatio: false,
+        responsive: true, maintainAspectRatio: false,
         plugins: {
           legend: {
             position: 'bottom',
-            labels: { font: { size: 10 }, boxWidth: 12 }
+            labels: { font: { size: 9 }, boxWidth: 10, padding: 6, usePointStyle: true }
           },
-          tooltip: { mode: 'index', intersect: false }
+          tooltip: { mode: 'index', intersect: false,
+                     titleFont: {size: 10}, bodyFont: {size: 10} }
         },
         scales: {
-          y: {
-            beginAtZero: true,
-            ticks: { font: { size: 10 } },
-            title: { display: true, text: 'Jumlah Kasus', font: { size: 10 } }
-          },
-          x: { ticks: { font: { size: 10 } } }
+          y: { beginAtZero: true, ticks: { font: { size: 9 }, maxTicksLimit: 5 } },
+          x: { ticks: { font: { size: 9 } } }
         }
       }
     });
   }
 
-
   /* =========================================================
-     9. EVENT DROPDOWN
+     15. EVENT DROPDOWN
      ========================================================= */
-  document.getElementById('select-penyakit').addEventListener('change', function () {
-    state.penyakit = this.value;
-    loadAllData();
+  document.getElementById('select-penyakit').addEventListener('change', function() {
+    state.penyakit = this.value; loadAllData();
   });
-
-  document.getElementById('select-tahun').addEventListener('change', function () {
-    state.tahun = this.value;
-    loadAllData();
+  document.getElementById('select-tahun').addEventListener('change', function() {
+    state.tahun = this.value; loadAllData();
   });
-
 
   /* =========================================================
-     10. LOADING HELPER
+     16. LOADING
      ========================================================= */
   function showLoading(show) {
     document.getElementById('loading').style.display = show ? 'block' : 'none';
