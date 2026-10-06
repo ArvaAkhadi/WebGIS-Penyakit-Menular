@@ -1,5 +1,0 @@
-.env
-.env.*
-!.env.example
-node_modules/
-upload_cases_to_supabase.py
