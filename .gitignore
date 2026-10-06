@@ -1,7 +1,5 @@
-__pycache__/
-*.pyc
-.vscode/
-.idea/
-.DS_Store
-Thumbs.db
-*.ipynb_checkpoints/
+.env
+.env.*
+!.env.example
+node_modules/
+upload_cases_to_supabase.py
