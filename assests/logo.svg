@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-labelledby="title">
-  <title id="title">WebGIS Semarang</title>
-  <rect x="5" y="5" width="110" height="110" rx="24" fill="#0b1b22" stroke="#294b54" stroke-width="3"/>
-  <path d="M29 25 47 18l17 8 19-8 15 13-5 17 9 14-17 15 3 17-21 7-16-13-17 7-13-17 7-16-8-15z" fill="#12313a" stroke="#4bd7cb" stroke-width="3" stroke-linejoin="round"/>
-  <path d="m29 51 21-5 14 9 19-7 19 8M47 18l3 28-10 18 7 27M64 26l0 29 16 14-3 24M84 18l-1 30 19 17" fill="none" stroke="#70aeb0" stroke-opacity=".58" stroke-width="2" stroke-linecap="round"/>
-  <path d="M54 43h12v9h9v12h-9v9H54v-9h-9V52h9z" fill="#ff8174" stroke="#0b1b22" stroke-width="2" stroke-linejoin="round"/>
-  <circle cx="28" cy="51" r="3" fill="#f2c16d"/>
-  <circle cx="101" cy="56" r="3" fill="#f2c16d"/>
-</svg>
