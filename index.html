@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>WebGIS Sehatin Semarang</title>
+  <link rel="icon" href="assests/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/fontawesome-all.min.css">
+  <link rel="stylesheet" href="css/global.css">
+  <link rel="stylesheet" href="css/landing.css">
+</head>
+<body class="landing-body">
+
+<header class="landing-header">
+  <div class="logo-wrap">
+    <img src="assests/logo.svg" alt="Logo WebGIS Sehatin Semarang" class="logo-img">
+    <span class="logo-text">WebGIS Sehatin Semarang</span>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="hero-content">
+    <h1 class="hero-title">
+      Dinamika Penyakit Menular dan<br>
+      Keterjangkauan Rumah Sakit di<br>
+      Kota Semarang
+    </h1>
+    <p class="hero-subtitle">
+      Jelajahi data sebaran penyakit menular dan aksesibilitas ke fasilitas
+      kesehatan di Kota Semarang untuk analisis yang lebih baik.
+    </p>
+
+    <div class="disease-icons">
+      <button type="button" class="disease-item" data-disease="dbd" aria-haspopup="dialog">
+        <i class="fas fa-mosquito" aria-hidden="true"></i>
+        <span>DBD (Demam Berdarah)</span>
+      </button>
+      <button type="button" class="disease-item" data-disease="leptospirosis" aria-haspopup="dialog">
+        <i class="fas fa-bacteria" aria-hidden="true"></i>
+        <span>Leptospirosis</span>
+      </button>
+      <button type="button" class="disease-item" data-disease="tb_baru" aria-haspopup="dialog">
+        <i class="fas fa-lungs" aria-hidden="true"></i>
+        <span>Tuberkulosis</span>
+      </button>
+    </div>
+
+    <div class="cta-buttons">
+      <a href="map.html" class="btn btn-primary">
+        <i class="fas fa-map-marked-alt"></i> Lihat Peta
+      </a>
+      <a href="login.html" class="btn btn-outline">
+        <i class="fas fa-user-lock"></i> Login
+      </a>
+    </div>
+
+    <p class="disclaimer">
+      *Data ini bersifat informatif dan dapat berubah sewaktu-waktu.
+    </p>
+  </div>
+</section>
+
+<dialog class="disease-modal" id="disease-modal" aria-labelledby="disease-modal-title">
+  <div class="disease-modal-header">
+    <div>
+      <h2 id="disease-modal-title">Data Kasus</h2>
+      <p id="disease-modal-subtitle">Data kasus Kota Semarang per tahun</p>
+    </div>
+    <button type="button" class="disease-modal-close" aria-label="Tutup jendela data">
+      <i class="fas fa-times" aria-hidden="true"></i>
+    </button>
+  </div>
+  <div class="disease-modal-table-wrap">
+    <table class="disease-data-table">
+      <thead>
+        <tr>
+          <th scope="col">Tahun</th>
+          <th scope="col">Laki-laki</th>
+          <th scope="col">Perempuan</th>
+          <th scope="col">Total Kasus</th>
+          <th scope="col">Meninggal</th>
+        </tr>
+      </thead>
+      <tbody id="disease-modal-rows">
+        <tr><td colspan="5" class="disease-modal-state">Memuat data...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</dialog>
+
+<footer class="landing-footer">
+  | Developed by Group 4 GIS Automation 2026
+</footer>
+
+<script src="js/disease-summary.js" defer></script>
+</body>
+</html>

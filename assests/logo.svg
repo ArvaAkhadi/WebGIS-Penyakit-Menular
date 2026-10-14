@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-labelledby="title">
+  <title id="title">WebGIS Sehatin Semarang</title>
+  <circle cx="60" cy="60" r="55" fill="#a00008"/>
+  <g transform="translate(21 23) scale(.65)">
+    <path d="M60 94C53 87 25 68 25 47c0-14 10-24 23-24 8 0 15 4 20 12 5-8 12-12 20-12 13 0 23 10 23 24 0 21-28 40-51 47Z" fill="#fff"/>
+    <path d="M31 57h17l7 10 10-25 9 20 7-10 6 5h10" fill="none" stroke="#a00008" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

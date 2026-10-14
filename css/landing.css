@@ -1,0 +1,161 @@
+.landing-body { display: flex; flex-direction: column; min-height: 100vh; background: #f4f5f6; }
+
+.landing-header {
+  position: absolute; top: 0; left: 0; right: 0;
+  z-index: 10; padding: 13px clamp(20px, 5vw, 72px);
+  border-bottom: 1px solid rgba(255,255,255,0.2);
+  background: linear-gradient(105deg, #850d14, #a91a22);
+}
+.logo-wrap { display: flex; align-items: center; gap: 12px; }
+.logo-img { width: 42px; height: 42px; }
+.logo-text {
+  color: #fff; font-family: var(--font-display);
+  font-size: 17px; font-weight: 600; letter-spacing: 0.04em;
+}
+
+.hero {
+  position: relative; min-height: 100vh;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden; isolation: isolate;
+  background-color: #f5f3f3;
+  background-image:
+    linear-gradient(90deg, rgba(245,247,249,0.94) 0%, rgba(245,247,249,0.86) 42%, rgba(245,247,249,0.62) 100%),
+    url('https://images.unsplash.com/photo-1586773860418-d37222d8fce3?auto=format&fit=crop&w=2200&q=85');
+  background-size: cover;
+  background-position: center 48%;
+}
+.hero::before {
+  content: ''; position: absolute; inset: 0; z-index: -1;
+  background-image:
+    linear-gradient(rgba(165,22,30,0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(165,22,30,0.045) 1px, transparent 1px),
+    linear-gradient(140deg, transparent 0 46%, rgba(165,22,30,0.08) 46.1% 46.25%, transparent 46.35%);
+  background-size: 42px 42px, 42px 42px, 100% 100%;
+  mask-image: linear-gradient(to bottom, black 0%, rgba(0,0,0,0.65) 62%, transparent 100%);
+  pointer-events: none;
+}
+.hero::after {
+  content: 'SEMARANG / 06°58\'S 110°25\'E';
+  position: absolute; right: clamp(20px, 5vw, 72px); top: 112px;
+  color: rgba(127,16,24,0.5); font: 11px var(--font-display);
+  letter-spacing: 0.16em;
+}
+.hero-content {
+  position: relative; z-index: 2;
+  width: min(100%, 860px); text-align: left;
+  padding: 132px clamp(24px, 7vw, 86px) 96px;
+  animation: hero-enter 650ms ease-out both;
+}
+.hero-content::before {
+  content: 'Pemetaan Kesehatan Kota Semarang'; display: block; margin-bottom: 20px;
+  color: var(--primary); font: 600 18px var(--font-display);
+  letter-spacing: 0;
+}
+.hero-title {
+  max-width: 650px; margin: 0 0 18px;
+  color: #2b3338; font: 600 44px/1.02 var(--font-display);
+  letter-spacing: 0.01em; text-wrap: balance;
+}
+.hero-title::after {
+  content: ''; display: block; width: 74px; height: 3px;
+  margin-top: 18px; background: var(--primary);
+}
+.hero-subtitle {
+  max-width: 500px; margin: 0 0 24px;
+  color: #65737a; font-size: 13px; line-height: 1.7;
+}
+.disease-icons {
+  display: flex; justify-content: flex-start; gap: 0;
+  flex-wrap: wrap; margin: 0 0 34px;
+  border-top: 1px solid rgba(127,16,24,0.18);
+  border-bottom: 1px solid rgba(127,16,24,0.18);
+  width: fit-content; margin-bottom: 26px;
+}
+.disease-item {
+  display: flex; align-items: center; gap: 9px;
+  padding: 11px 10px 11px 0; margin-right: 10px;
+  color: #38464d; font-size: 12px; font-weight: 600;
+  font-family: inherit; text-align: left; cursor: pointer;
+  background: transparent; border: 0;
+  transition: color 0.16s ease, background-color 0.16s ease;
+}
+.disease-item + .disease-item { padding-left: 10px; border-left: 1px solid rgba(127,16,24,0.18); }
+.disease-item i { color: var(--primary); font-size: 14px; }
+.disease-item:hover { color: var(--primary-dark); background: rgba(165,22,30,0.05); }
+.disease-item:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+.disease-modal {
+  width: min(680px, calc(100vw - 32px));
+  max-height: min(82vh, 620px);
+  padding: 0;
+  color: var(--text-dark);
+  background: #fff;
+  border: 1px solid #e7d9da;
+  border-radius: 10px;
+  box-shadow: 0 24px 70px rgba(47,14,17,0.24);
+}
+.disease-modal::backdrop { background: rgba(29,34,38,0.46); backdrop-filter: blur(2px); }
+.disease-modal-header {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;
+  padding: 18px 20px 14px;
+}
+.disease-modal-header h2 { margin: 0; color: #263b4d; font: 700 21px/1.2 var(--font-display); }
+.disease-modal-header p { margin: 4px 0 0; color: #768592; font-size: 12px; }
+.disease-modal-close {
+  display: grid; place-items: center; flex: 0 0 34px;
+  width: 34px; height: 34px; padding: 0;
+  color: #536573; background: #f0f3f6; border: 0; border-radius: 50%;
+}
+.disease-modal-close:hover { color: #fff; background: var(--primary); }
+.disease-modal-table-wrap { max-height: calc(82vh - 80px); overflow: auto; padding: 0 20px 16px; }
+.disease-data-table { width: 100%; min-width: 540px; border-collapse: collapse; font-size: 12px; }
+.disease-data-table th, .disease-data-table td { padding: 9px 10px; text-align: left; border-bottom: 1px solid #e3e9ee; }
+.disease-data-table th { color: #fff; background: #a00008; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+.disease-data-table th:first-child { border-radius: 4px 0 0 4px; }
+.disease-data-table th:last-child { border-radius: 0 4px 4px 0; }
+.disease-data-table td { color: #526475; }
+.disease-data-table tbody tr:nth-child(even) { background: #f6f8fa; }
+.disease-data-table tbody tr:hover { background: #fbeded; }
+.disease-modal-state { text-align: center !important; color: #778590 !important; padding: 22px 10px !important; }
+.cta-buttons {
+  display: flex; justify-content: flex-start;
+  gap: 10px; flex-wrap: wrap; margin-bottom: 18px;
+}
+.cta-buttons .btn { min-width: 124px; min-height: 38px; }
+.cta-buttons .btn-outline { border-color: #c7adaf; color: var(--primary-dark); }
+.cta-buttons .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+.disclaimer { color: #78858b; font-size: 11px; }
+
+.landing-footer {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  padding: 10px clamp(20px, 5vw, 72px); text-align: left;
+  color: #f6e9e9; font-size: 11px;
+  border-top: 1px solid rgba(255,255,255,0.16);
+  background: #850d14; z-index: 10;
+}
+
+@keyframes hero-enter {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 700px) {
+  .landing-header { padding: 16px 20px; }
+  .logo-img { width: 36px; height: 36px; }
+  .logo-text { font-size: 18px; }
+  .hero { min-height: 100svh; }
+  .hero::after { top: 90px; right: 20px; font-size: 9px; }
+  .hero-content { padding: 118px 22px 94px; }
+  .hero-title { font-size: 38px; line-height: 1.02; }
+  .hero-title::after { margin-top: 14px; }
+  .hero-subtitle { max-width: 480px; margin-bottom: 18px; font-size: 13px; }
+  .disease-icons { width: 100%; }
+  .disease-icons { margin-bottom: 20px; }
+  .disease-item { padding: 10px 10px 10px 0; margin-right: 10px; font-size: 10px; }
+  .disease-item + .disease-item { padding-left: 10px; }
+  .landing-footer { padding: 12px 20px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-content { animation: none; }
+}
