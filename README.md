@@ -44,7 +44,7 @@ Peta dipublikasikan melalui GitHub Pages dan dapat diakses melalui tautan beriku
 
 ### Tampilan Aplikasi
 
-> **Tambahkan screenshot aktual sebelum README dipublikasikan.** Simpan gambar halaman utama di `docs/images/tampilan-utama.png`, lalu aktifkan baris gambar di bawah dengan menghapus tanda komentar HTML.
+Belum ada screenshot aplikasi yang disertakan dalam arsip ini. Untuk menambahkan preview, simpan screenshot aktual ke `docs/images/tampilan-utama.png`, lalu aktifkan baris gambar di bawah dengan menghapus tanda komentar HTML.
 
 <!--
 <p align="center">
@@ -192,8 +192,16 @@ Struktur utama yang ditemukan pada ZIP repositori adalah:
 ```text
 WebGIS-Penyakit-Menular/
 ├── index.html
+├── map.html
+├── report.html
+├── login.html
+├── verify.html
+├── update.html
+├── admin-dashboard.html
+├── server.js
+├── package.json
+├── .env.example
 ├── README.txt
-├── scraper_semarang.py
 ├── css/
 │   ├── leaflet.css
 │   ├── qgis2web.css
@@ -216,26 +224,34 @@ WebGIS-Penyakit-Menular/
 │   └── tb_baru/
 │       └── ...
 ├── js/
-│   ├── leaflet.js
+│   ├── map-core.js
+│   ├── auth.js
+│   ├── ai-assistant.js
+│   ├── supabase-client.js
 │   ├── qgis2web_expressions.js
-│   ├── leaflet-measure.js
 │   └── ...
+├── supabase/
+│   └── functions/ai-chat/index.ts
+├── .github/workflows/deploy-pages.yml
 └── webfonts/
     └── ...
 ```
 
 ### Penjelasan berkas utama
 
-- **`index.html`** — halaman utama yang mengatur antarmuka, peta, pilihan penyakit/tahun, statistik, grafik, dan tabel.
+- **`index.html`** — halaman landing yang menyediakan pengantar aplikasi dan navigasi ke peta.
+- **`map.html`** — halaman peta interaktif yang memuat layer, pilihan penyakit/tahun, panel informasi, grafik, tabel, dan asisten AI.
 - **`css/`** — stylesheet untuk peta, kontrol, ikon, dan tata letak.
 - **`js/`** — library dan skrip JavaScript yang mendukung peta dan interaksi.
 - **`data/puskesmas.geojson`** — geometri dan atribut wilayah kerja Puskesmas.
 - **`data/dbd/`, `data/leptospirosis/`, `data/tb_baru/`** — data JSON yang digunakan untuk peta, grafik, dan tabel kasus per tahun.
 - **Berkas `data/*_*.js`** — layer geografis untuk fasilitas kesehatan dan kategori aksesibilitas.
-- **`scraper_semarang.py`** — skrip Python untuk mengambil dan menyiapkan data dari layanan sumber. Tinjau keamanan dan kelayakan distribusinya sebelum dipertahankan di repositori publik.
+- **`server.js`** dan **`package.json`** — server Node.js untuk pengembangan lokal dan endpoint chatbot lama; jalankan melalui `npm start` setelah konfigurasi `.env` dibuat.
+- **`supabase/functions/ai-chat/index.ts`** — kode Supabase Edge Function untuk fitur chatbot yang di-deploy secara terpisah.
+- **`js/supabase-client.js`** — konfigurasi klien Supabase yang digunakan halaman frontend. Pastikan kebijakan akses database dan RLS dikonfigurasi dengan benar.
 - **`webfonts/`** — berkas font yang digunakan oleh komponen antarmuka.
 
-Nama dan isi berkas di atas mengikuti ZIP yang diperiksa. Jika struktur repositori berubah, perbarui bagian ini agar tetap sesuai.
+Nama dan isi berkas di atas merupakan ringkasan struktur ZIP yang diperiksa. ZIP ini **tidak menyertakan** `scraper_semarang.py`; pengambilan data tidak didokumentasikan sebagai skrip Python dalam repositori ini. Jika struktur repositori berubah, perbarui bagian ini agar tetap sesuai.
 
 ## 9. Cara Mengakses dan Menggunakan
 
@@ -265,16 +281,31 @@ Gunakan layer yang tersedia pada peta untuk melihat Rumah Sakit dan kategori aks
 
 ## 10. Menjalankan Secara Lokal
 
-Aplikasi terdiri atas berkas HTML, CSS, JavaScript, dan data lokal. Untuk mencoba menjalankannya:
+Aplikasi menyediakan server Node.js untuk pengujian lokal. Persyaratan versi Node.js ditentukan pada `package.json` (Node.js **20.6.0 atau lebih baru**).
 
 1. Unduh repositori dan ekstrak berkas ZIP.
-2. Buka folder proyek.
-3. Jalankan `index.html` melalui server lokal, misalnya ekstensi Live Server pada Visual Studio Code.
-4. Periksa apakah peta, data, grafik, dan tabel berhasil dimuat.
+2. Pastikan Node.js sudah terpasang.
+3. Salin `.env.example` menjadi `.env`.
+4. Isi konfigurasi yang diperlukan pada `.env`. `PORT` bersifat opsional (nilai bawaan `3000`); `GROQ_API_KEY` diperlukan jika menggunakan endpoint chatbot lama pada server Node.
+5. Jalankan perintah berikut dari folder proyek:
 
-Walaupun berkas ekspor dasar dapat dirancang untuk dibuka langsung, **server lokal lebih disarankan** untuk pengujian karena perilaku pemuatan data dapat dipengaruhi oleh kebijakan keamanan peramban terhadap berkas lokal (`file://`) dan dependensi eksternal.
+   ```sh
+   npm start
+   ```
 
-Koneksi internet mungkin diperlukan untuk memuat library dari CDN dan tile basemap.
+6. Buka `http://localhost:3000/` untuk halaman utama atau `http://localhost:3000/map.html` untuk peta.
+
+File `.env.example` adalah templat, bukan berkas konfigurasi yang otomatis dipakai. Jangan commit API key rahasia ke repositori. Koneksi internet tetap diperlukan untuk memuat pustaka CDN, tile basemap, dan layanan Supabase.
+
+Chatbot melalui Supabase Edge Function membutuhkan konfigurasi secret dan deployment terpisah; `.env` lokal tidak otomatis mengatur secret di Supabase.
+
+### 10.1 Supabase dan Chatbot
+
+Frontend menggunakan klien Supabase melalui `js/supabase-client.js`. Halaman pelaporan, login admin, verifikasi laporan, dan pembaruan data berinteraksi dengan tabel Supabase. Nama tabel yang dirujuk dalam kode mencakup `reports`, `admins`, dan `cases`; struktur tabel, kolom, autentikasi, serta kebijakan Row Level Security (RLS) harus disiapkan pada proyek Supabase yang sesuai.
+
+Kode Edge Function chatbot tersedia di `supabase/functions/ai-chat/index.ts` dan harus di-deploy secara terpisah. Function membaca secret `GROQ_API_KEY`, serta `ALLOWED_ORIGINS` untuk daftar origin yang diperbolehkan. `GROQ_MODEL` dapat diatur untuk memilih model. Konfigurasi pada server Node lokal berbeda dari secret Edge Function.
+
+**Catatan keamanan:** pemeriksaan sesi admin di frontend tidak menggantikan otorisasi di database. Batasi operasi sensitif dengan RLS dan aturan sisi server. Jangan menaruh secret provider AI di JavaScript frontend.
 
 ## 11. Publikasi
 
